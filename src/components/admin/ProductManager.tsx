@@ -619,7 +619,9 @@ const ProductManager = () => {
               <p className="text-muted-foreground text-sm mb-2 line-clamp-2">
                 {product.description}
               </p>
-              <p className="font-bold text-primary mb-4">{product.price} جنيه</p>
+              <p className="font-bold text-primary mb-4">{product.price} ريال
+                
+              </p>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
