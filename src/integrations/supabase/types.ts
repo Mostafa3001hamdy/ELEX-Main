@@ -14,11 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      catalogs: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          pdf_file_path: string
+          pdf_file_url: string
+          pdf_file_size: number | null
+          image_file_path: string | null
+          image_file_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          pdf_file_path: string
+          pdf_file_url: string
+          pdf_file_size?: number | null
+          image_file_path?: string | null
+          image_file_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          pdf_file_path?: string
+          pdf_file_url?: string
+          pdf_file_size?: number | null
+          image_file_path?: string | null
+          image_file_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           created_at: string | null
           description: string | null
           featured: boolean | null
+          category: string | null
           id: number
           image_url: string | null
           image_urls: string[] | null
@@ -40,6 +80,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           featured?: boolean | null
+          category?: string | null
           id?: number
           image_url?: string | null
           image_urls?: string[] | null
@@ -61,6 +102,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           featured?: boolean | null
+          category?: string | null
           id?: number
           image_url?: string | null
           image_urls?: string[] | null

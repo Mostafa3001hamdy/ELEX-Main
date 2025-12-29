@@ -125,7 +125,7 @@ const translations = {
     'about.companyDescription': 'شركة ELEX متخصصة في الحلول الكهربائية والإلكترونية ، تجمع بين الابتكار والتقنيات الحديثة لتقديم تجربة متكاملة بمعايير عالمية ,نفخر بخبرتنا وفريقنا المتخصص القادر على تنفيذ المشاريع بدقة وكفاءة، لتلبية متطلبات السوق السعودي والقطاعات المختلفة.',
     'about.yearsExperience': 'سنوات خبرة',
     'about.satisfiedClients': 'عميل راضٍ',
-    'about.completedProjects': 'مشروع منجز',
+    'about.completedProjects': 'مشاريع منجزة',
     'about.innovativeSolutions': 'حل مبتكر',
     'about.ourVision': 'رؤيتنا',
     'about.visionDescription': 'أن نكون الشركة الرائدة في مجال الحلول الكهربائية والإلكترونية والإضاءة في المملكة العربية السعودية، وأن نساهم في تحقيق رؤية 2030 من خلال تقديم حلول مبتكرة ومستدامة.',
@@ -141,7 +141,8 @@ const translations = {
     'about.satisfactionDesc': 'نضع رضا عملائنا في المقدمة ونسعى لتجاوز توقعاتهم',
     'about.environmentalSustainability': 'الاستدامة البيئية',
     'about.sustainabilityDesc': 'نلتزم بالحلول الصديقة للبيئة والموفرة للطاقة',
-    
+    'about.airFreightTons': 'طن شحن جوي',
+
     // Footer
     'footer.companyName': 'ELEX',
     'footer.companyDescription': 'شركة متخصصة في الحلول الكهربائية والإلكترونية والإضاءة والتكييف والشاشات الرقمية.نلتزم بتقديم حلول مبتكرة ومستدامة تواكب تطلعات السوق، مع ضمان الجودة والتميز في جميع أنحاء المملكة.',
@@ -288,7 +289,7 @@ const translations = {
     'about.satisfactionDesc': 'We put our customers satisfaction first and strive to exceed their expectations',
     'about.environmentalSustainability': 'Environmental Sustainability',
     'about.sustainabilityDesc': 'We are committed to eco-friendly and energy-efficient solutions',
-    
+    'about.airFreightTons': 'Air Freight Tons',
     // Footer
     'footer.companyName': 'ELEX',
     'footer.companyDescription': 'ELEX company specializes in energy and lighting solutions, electrical services, and technical innovation. We provide the best innovative and sustainable solutions to our customers while ensuring quality and excellence throughout the Kingdom',

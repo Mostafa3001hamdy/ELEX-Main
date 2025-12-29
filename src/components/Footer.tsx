@@ -8,6 +8,29 @@ import {
   Instagram
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import snapIcon from "@/assets/snapp.png";
+
+const SnapchatIcon = () => (
+  <img
+    src={snapIcon}
+    alt="Snapchat"
+    className="h-5 w-5 object-contain"
+    loading="lazy"
+  />
+);
+
+const TikTokIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+    className="h-5 w-5"
+  >
+    <path
+      fill="#000"
+      d="M11.792 0h3.217c.07 1.403.63 2.728 1.568 3.77a5.4 5.4 0 0 0 3.57 1.675v3.234a9.031 9.031 0 0 1-4.45-1.21v5.916a5.783 5.783 0 1 1-5.783-5.78c.196 0 .389.013.58.037v3.245a2.556 2.556 0 1 0 1.92 2.46V0Z"
+    />
+  </svg>
+);
 
 const Footer = () => {
   const { t } = useLanguage();
@@ -26,7 +49,7 @@ const Footer = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
-          <div className="col-span-1 lg:col-span-2">
+          <div className="col-span-1 lg:col-span-2" data-animate="fade-up">
             <div className="text-3xl font-bold mb-4">{t('footer.companyName')}</div>
             <p className="text-primary-foreground/80 mb-6 leading-relaxed max-w-md">
               {t('footer.companyDescription')}
@@ -50,13 +73,31 @@ const Footer = () => {
               >
                 <XLogo className="h-5 w-5" />
               </a>
+              <a 
+                href="https://www.snapchat.com/add/elex.ksa?share_id=IVKmejZxnV4&locale=ar-EG" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-primary-foreground/10 hover:bg-primary-foreground/20 rounded-full p-3 transition-smooth"
+                aria-label="Snapchat"
+              >
+                <SnapchatIcon />
+              </a>
+              <a 
+                href="https://www.tiktok.com/@elexlltd?_r=1&_t=ZS-92bYyxjGThv" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-primary-foreground/10 hover:bg-primary-foreground/20 rounded-full p-3 transition-smooth"
+                aria-label="TikTok"
+              >
+                <TikTokIcon />
+              </a>
             </div>
           </div>
 
           {/* WhatsApp CTA removed per request */}
 
           {/* Contact Info */}
-          <div>
+          <div data-animate="fade-up" data-delay="120">
             <h3 className="text-lg font-semibold mb-6">{t('footer.contactUs')}</h3>
             <div className="space-y-4">
               <div className="flex items-start space-x-3 rtl:space-x-reverse">
@@ -91,7 +132,7 @@ const Footer = () => {
 
         {/* Newsletter Signup */}
         <div className="mt-12 pt-8 border-t border-primary-foreground/20">
-          <div className="max-w-md mx-auto text-center">
+          <div className="max-w-md mx-auto text-center" data-animate="fade-up" data-delay="160">
             <h3 className="text-lg font-semibold mb-4">{t('footer.newsletter')}</h3>
             <p className="text-primary-foreground/80 mb-6">
               {t('footer.newsletterDesc')}
@@ -115,7 +156,7 @@ const Footer = () => {
 
       {/* Bottom Bar */}
       <div className="border-t border-primary-foreground/20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6" data-animate="fade-up" data-delay="200">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-primary-foreground/80 text-sm">
               {t('footer.allRightsReserved')}

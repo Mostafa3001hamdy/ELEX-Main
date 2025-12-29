@@ -18,10 +18,10 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 5%;
 
-    /* ELEX Primary Blue */
-    --primary: 215 100% 50%;
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 215 100% 45%;
+    /* Primary now Black */
+    --primary: 0 0% 10%;
+    --primary-foreground: 0 0% 98%;
+    --primary-hover: 0 0% 20%;
 
     /* ELEX Secondary Gray */
     --secondary: 0 0% 95%;
@@ -30,28 +30,28 @@ All colors MUST be HSL.
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
 
-    /* ELEX Accent Colors */
-    --accent: 215 100% 96%;
-    --accent-foreground: 215 100% 20%;
+    /* Accent neutral */
+    --accent: 0 0% 92%;
+    --accent-foreground: 0 0% 10%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: 215 100% 50%;
+    --ring: 0 0% 20%;
 
     --radius: 0.75rem;
 
-    /* ELEX Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(215 100% 50%), hsl(215 100% 60%));
-    --gradient-hero: linear-gradient(135deg, hsl(215 100% 10%), hsl(215 100% 25%));
-    --gradient-accent: linear-gradient(135deg, hsl(0 0% 98%), hsl(215 100% 98%));
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 10%), hsl(0 0% 22%));
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 6%), hsl(0 0% 15%));
+    --gradient-accent: linear-gradient(135deg, hsl(0 0% 98%), hsl(0 0% 92%));
 
-    /* ELEX Shadows */
-    --shadow-soft: 0 4px 20px -2px hsl(215 100% 50% / 0.1);
-    --shadow-medium: 0 8px 30px -4px hsl(215 100% 50% / 0.15);
-    --shadow-strong: 0 15px 40px -8px hsl(215 100% 50% / 0.25);
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -2px hsl(0 0% 10% / 0.12);
+    --shadow-medium: 0 8px 30px -4px hsl(0 0% 10% / 0.16);
+    --shadow-strong: 0 15px 40px -8px hsl(0 0% 10% / 0.24);
 
     /* Animation */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -122,10 +122,55 @@ All colors MUST be HSL.
 
 @layer components {
   .section-logo-bg {
-    background-image: linear-gradient(hsl(var(--background) / 0.96), hsl(var(--background) / 0.96)), url('/lovable-uploads/d1ce0a3e-b830-4b5c-93e9-c702c9c21fd7.png');
+    background-image: linear-gradient(hsl(var(--background) / 0.96), hsl(var(--background) / 0.96));
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
     background-attachment: fixed;
+  }
+}
+
+@layer utilities {
+  .scroll-reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    filter: blur(8px);
+    transition: opacity 0.75s ease, transform 0.75s ease, filter 0.75s ease;
+  }
+
+  .scroll-reveal-up {
+    transform: translateY(28px);
+  }
+
+  .scroll-reveal-left {
+    transform: translateX(-28px);
+  }
+
+  .scroll-reveal-right {
+    transform: translateX(28px);
+  }
+
+  .scroll-reveal-scale {
+    transform: translateY(24px) scale(0.96);
+  }
+
+  .scroll-reveal-visible {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal,
+  .scroll-reveal-up,
+  .scroll-reveal-left,
+  .scroll-reveal-right,
+  .scroll-reveal-scale,
+  .scroll-reveal-visible {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
   }
 }

@@ -252,7 +252,7 @@ const ServiceDetail = () => {
                           rel="noopener noreferrer"
                           className="w-full inline-block"
                         >
-                          <Button variant="secondary" className="w-full" size="lg">
+                          <Button className="w-full bg-black text-white hover:bg-black/85 border border-black" size="lg">
                             <MessageCircle className="mr-2 h-4 w-4" />
                             {t('service.whatsapp')}
                           </Button>

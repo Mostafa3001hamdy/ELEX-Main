@@ -1,17 +1,23 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Plus, Package, FolderOpen, Settings } from "lucide-react";
+import { LogOut, Package, FolderOpen, Settings, BookOpen } from "lucide-react";
 import ProductManager from "@/components/admin/ProductManager";
 import ProjectManager from "@/components/admin/ProjectManager";
 import ServiceManager from "@/components/admin/ServiceManager";
+import CatalogManager from "@/components/admin/CatalogManager";
 
-const AdminDashboard = () => {
+type AdminDashboardProps = {
+  defaultTab?: "products" | "projects" | "services" | "catalogs";
+};
+
+const AdminDashboard = ({ defaultTab = "products" }: AdminDashboardProps) => {
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<AdminDashboardProps["defaultTab"]>(defaultTab);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -19,15 +25,17 @@ const AdminDashboard = () => {
     checkAuth();
   }, []);
 
+  useEffect(() => {
+    setActiveTab(defaultTab);
+  }, [defaultTab]);
+
   const checkAuth = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user || user.id !== "67177e71-c272-49c2-ac7e-bfeb68638680") {
         navigate("/admin/login");
         return;
       }
-      
       setIsLoading(false);
     } catch (error) {
       navigate("/admin/login");
@@ -38,7 +46,7 @@ const AdminDashboard = () => {
     await supabase.auth.signOut();
     toast({
       title: "تم تسجيل الخروج",
-      description: "نراك قريباً",
+      description: "تم إنهاء الجلسة.",
     });
     navigate("/");
   };
@@ -48,7 +56,7 @@ const AdminDashboard = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>جاري التحميل...</p>
+          <p>جاري التحقق من صلاحيات الدخول...</p>
         </div>
       </div>
     );
@@ -59,8 +67,8 @@ const AdminDashboard = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold">لوحة الإدارة</h1>
-            <p className="text-muted-foreground mt-2">إدارة المنتجات والمشاريع والخدمات</p>
+            <h1 className="text-3xl font-bold">لوحة التحكم</h1>
+            <p className="text-muted-foreground mt-2">إدارة المنتجات والمشاريع والخدمات والكتالوجات</p>
           </div>
           <Button onClick={handleLogout} variant="outline">
             <LogOut className="mr-2 h-4 w-4" />
@@ -68,8 +76,13 @@ const AdminDashboard = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="products" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs
+          value={activeTab}
+          defaultValue={defaultTab}
+          onValueChange={(value) => setActiveTab(value as AdminDashboardProps["defaultTab"])}
+          className="space-y-6"
+        >
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="products" className="flex items-center gap-2">
               <Package className="h-4 w-4" />
               المنتجات
@@ -82,6 +95,10 @@ const AdminDashboard = () => {
               <Settings className="h-4 w-4" />
               الخدمات
             </TabsTrigger>
+            <TabsTrigger value="catalogs" className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              الكتالوجات
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="products">
@@ -92,7 +109,7 @@ const AdminDashboard = () => {
                   إدارة المنتجات
                 </CardTitle>
                 <CardDescription>
-                  إضافة وتعديل وحذف المنتجات
+                  يمكنك إضافة وتعديل وحذف المنتجات.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -109,7 +126,7 @@ const AdminDashboard = () => {
                   إدارة المشاريع
                 </CardTitle>
                 <CardDescription>
-                  إضافة وتعديل وحذف المشاريع
+                  يمكنك إضافة وتعديل وحذف المشاريع.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -126,11 +143,28 @@ const AdminDashboard = () => {
                   إدارة الخدمات
                 </CardTitle>
                 <CardDescription>
-                  إضافة وتعديل وحذف الخدمات
+                  يمكنك إضافة وتعديل وحذف الخدمات.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ServiceManager />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="catalogs">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  إدارة الكتالوجات
+                </CardTitle>
+                <CardDescription>
+                  رفع ملفات PDF مع صورة اختيارية، مع إمكانية التعديل والحذف.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CatalogManager />
               </CardContent>
             </Card>
           </TabsContent>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,9 +15,10 @@ interface Product {
   description: string;
   price: number;
   image_url: string;
-  image_urls?: string[] | null;
+  image_urls?: string[] | string | null;
   featured: boolean;
   created_at: string;
+  category?: string | null;
   watt?: number | null;
   cri?: number | null;
   beam_angle?: number | null;
@@ -31,12 +32,7 @@ interface Product {
   spec_pdf_url?: string | null;
 }
 
-interface ProductImage {
-  id: number;
-  product_id: number;
-  image_url: string;
-  created_at?: string | null;
-}
+const CATEGORY_OPTIONS = ["كهربائية", "إلكترونية"];
 
 const ProductManager = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -51,6 +47,7 @@ const ProductManager = () => {
     description: "",
     price: "",
     featured: false,
+    category: CATEGORY_OPTIONS[0],
     image: null as File | null,
     watt: "",
     cri: "",
@@ -66,7 +63,6 @@ const ProductManager = () => {
   });
 
   const [extraImages, setExtraImages] = useState<File[]>([]);
-  const [existingImages, setExistingImages] = useState<ProductImage[]>([]);
   const [imageUrlsPreview, setImageUrlsPreview] = useState<string[]>([]);
 
   useEffect(() => {
@@ -81,7 +77,7 @@ const ProductManager = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setProducts(data || []);
+      setProducts((data as Product[]) || []);
     } catch (error: any) {
       toast({
         title: "خطأ في جلب المنتجات",
@@ -95,123 +91,85 @@ const ProductManager = () => {
 
   const uploadImage = async (file: File): Promise<string> => {
     const fileExt = file.name.split(".").pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("products")
-      .upload(filePath, file);
-
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+    const { error: uploadError } = await supabase.storage.from("products").upload(fileName, file);
     if (uploadError) throw uploadError;
-
-    const { data } = supabase.storage.from("products").getPublicUrl(filePath);
+    const { data } = supabase.storage.from("products").getPublicUrl(fileName);
     return data.publicUrl;
   };
 
   const uploadPdf = async (file: File): Promise<string> => {
     const fileExt = file.name.split(".").pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
     const { error: uploadError } = await supabase.storage
       .from("product-specs")
-      .upload(filePath, file, { contentType: "application/pdf" });
-
+      .upload(fileName, file, { contentType: "application/pdf" });
     if (uploadError) throw uploadError;
-
-    const { data } = supabase.storage.from("product-specs").getPublicUrl(filePath);
+    const { data } = supabase.storage.from("product-specs").getPublicUrl(fileName);
     return data.publicUrl;
   };
 
-  const fetchProductImages = async (productId: number) => {
-    try {
-      const { data, error } = await supabase
-        .from("product_images")
-        .select("id, product_id, image_url, created_at")
-        .eq("product_id", productId)
-        .order("created_at", { ascending: true });
-      if (!error) setExistingImages((data as ProductImage[]) || []);
-    } catch (_e) {
-      setExistingImages([]);
-    }
-  };
-
-  const deleteProductImage = async (imageId: number) => {
-    const { error } = await supabase
-      .from("product_images")
-      .delete()
-      .eq("id", imageId);
-    if (error) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
-    } else {
-      setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
-      toast({ title: "تم الحذف", description: "تم حذف الصورة" });
-    }
-  };
-
-  const removeExtraImage = (index: number) => {
-    setExtraImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleDeleteImageUrl = async (url: string) => {
-    if (!editingProduct) return;
-    try {
-      const currentUrls = editingProduct.image_urls || [];
-      const newUrls = currentUrls.filter((u) => u !== url);
-      const newMain = url === editingProduct.image_url ? (newUrls[0] || null) : editingProduct.image_url;
-
-      const { error } = await supabase
-        .from("products")
-        .update({ image_urls: newUrls, image_url: newMain })
-        .eq("id", editingProduct.id);
-
-      if (error) throw error;
-
-      setEditingProduct({ ...editingProduct, image_urls: newUrls, image_url: (newMain as any) || "" });
-      setImageUrlsPreview(newUrls);
-      toast({ title: "تم حذف الصورة", description: "تم تحديث صور المنتج" });
-    } catch (error: any) {
-      toast({ title: "خطأ في حذف الصورة", description: error.message, variant: "destructive" });
-    }
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      description: "",
+      price: "",
+      featured: false,
+      category: CATEGORY_OPTIONS[0],
+      image: null,
+      watt: "",
+      cri: "",
+      beam_angle: "",
+      voltage_range: "",
+      ip_rating: "",
+      total_lumen: "",
+      warranty_years: "",
+      base_type: "",
+      material: "",
+      usage_areas: "",
+      spec_pdf: null,
+    });
+    setExtraImages([]);
+    setImageUrlsPreview([]);
+    setEditingProduct(null);
+    setShowAddForm(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
-      const parsedPrice = parseFloat(formData.price);
-      if (Number.isNaN(parsedPrice) || parsedPrice < 0) {
-        toast({ title: "قيمة السعر غير صحيحة", description: "برجاء إدخال سعر صالح", variant: "destructive" });
-        setIsSubmitting(false);
-        return;
-      }
-      let imageUrl = editingProduct?.image_url || "";
-      let imageUrls: string[] = imageUrlsPreview ? [...imageUrlsPreview] : [];
-      let specPdfUrl: string | null = editingProduct?.spec_pdf_url || null;
+      if (!formData.name.trim()) throw new Error("الاسم مطلوب");
+      const parsedPrice = formData.price ? Number(formData.price) : null;
 
+      let imageUrl = editingProduct?.image_url || "";
       if (formData.image) {
         imageUrl = await uploadImage(formData.image);
       }
 
-      // Upload extra images first and collect URLs
-      if (extraImages.length > 0) {
+      const imageUrls: string[] = Array.isArray(editingProduct?.image_urls)
+        ? (editingProduct?.image_urls as string[])
+        : typeof editingProduct?.image_urls === "string"
+          ? (() => { try { return JSON.parse(editingProduct?.image_urls || "[]"); } catch { return []; } })()
+          : [];
+      if (extraImages.length) {
         for (const file of extraImages) {
           const url = await uploadImage(file);
           imageUrls.push(url);
         }
       }
 
-      // Upload spec PDF if provided
+      let specPdfUrl = editingProduct?.spec_pdf_url || null;
       if (formData.spec_pdf) {
         specPdfUrl = await uploadPdf(formData.spec_pdf);
       }
 
       const productData = {
-        name: formData.name,
-        description: formData.description,
+        name: formData.name.trim(),
+        description: formData.description.trim(),
         price: parsedPrice,
         featured: formData.featured,
+        category: formData.category || null,
         image_url: imageUrl,
         image_urls: imageUrls,
         watt: formData.watt ? parseInt(formData.watt, 10) : null,
@@ -228,38 +186,19 @@ const ProductManager = () => {
       };
 
       if (editingProduct) {
-        const { error } = await supabase
-          .from("products")
-          .update(productData)
-          .eq("id", editingProduct.id);
-
+        const { error } = await supabase.from("products").update(productData).eq("id", editingProduct.id);
         if (error) throw error;
-
-        toast({
-          title: "تم تحديث المنتج",
-          description: "تم تحديث المنتج بنجاح",
-        });
+        toast({ title: "تم تحديث المنتج", description: "تم حفظ التغييرات بنجاح" });
       } else {
-        const { error } = await supabase
-          .from("products")
-          .insert(productData);
-
+        const { error } = await supabase.from("products").insert(productData);
         if (error) throw error;
-
-        toast({
-          title: "تمت إضافة المنتج",
-          description: "تم إضافة المنتج بنجاح",
-        });
+        toast({ title: "تم إنشاء المنتج", description: "تم حفظ المنتج الجديد بنجاح" });
       }
 
       resetForm();
       fetchProducts();
     } catch (error: any) {
-      toast({
-        title: "خطأ",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "حدث خطأ", description: error.message, variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
@@ -267,11 +206,18 @@ const ProductManager = () => {
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
+    const parsedImages = Array.isArray(product.image_urls)
+      ? product.image_urls
+      : typeof product.image_urls === "string"
+        ? (() => { try { return JSON.parse(product.image_urls); } catch { return []; } })()
+        : [];
+
     setFormData({
-      name: product.name,
+      name: product.name || "",
       description: product.description || "",
-      price: product.price.toString(),
-      featured: product.featured || false,
+      price: product.price != null ? String(product.price) : "",
+      featured: !!product.featured,
+      category: product.category || CATEGORY_OPTIONS[0],
       image: null,
       watt: product.watt != null ? String(product.watt) : "",
       cri: product.cri != null ? String(product.cri) : "",
@@ -285,308 +231,146 @@ const ProductManager = () => {
       usage_areas: product.usage_areas || "",
       spec_pdf: null,
     });
+    setImageUrlsPreview(parsedImages);
     setExtraImages([]);
-    
-    let imageUrls: string[] = [];
-    if (product.image_urls) {
-      if (typeof product.image_urls === 'string') {
-        try {
-          const parsed = JSON.parse(product.image_urls);
-          if (Array.isArray(parsed)) {
-            imageUrls = parsed;
-          }
-        } catch (error) {
-          console.error("Failed to parse image_urls:", error);
-        }
-      } else if (Array.isArray(product.image_urls)) {
-        imageUrls = product.image_urls;
-      }
-    }
-    
-    setImageUrlsPreview(imageUrls);
     setShowAddForm(true);
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm("هل أنت متأكد من حذف هذا المنتج؟")) return;
-
     try {
-      const { error } = await supabase
-        .from("products")
-        .delete()
-        .eq("id", id);
-
+      const { error } = await supabase.from("products").delete().eq("id", id);
       if (error) throw error;
-
-      toast({
-        title: "تم حذف المنتج",
-        description: "تم حذف المنتج بنجاح",
-      });
-
+      toast({ title: "تم حذف المنتج" });
       fetchProducts();
     } catch (error: any) {
-      toast({
-        title: "خطأ في الحذف",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "خطأ في الحذف", description: error.message, variant: "destructive" });
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      description: "",
-      price: "",
-      featured: false,
-      image: null,
-      watt: "",
-      cri: "",
-      beam_angle: "",
-      voltage_range: "",
-      ip_rating: "",
-      total_lumen: "",
-      warranty_years: "",
-      base_type: "",
-      material: "",
-      usage_areas: "",
-      spec_pdf: null,
-    });
-    setExtraImages([]);
-    setExistingImages([]);
-    setImageUrlsPreview([]);
-    setShowAddForm(false);
-    setEditingProduct(null);
-  };
-
-  if (isLoading) {
-    return <div className="text-center py-8">جاري التحميل...</div>;
-  }
-
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">المنتجات ({products.length})</h3>
-        <Button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="flex items-center gap-2"
-        >
-          {showAddForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          {showAddForm ? "إلغاء" : "إضافة منتج"}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">إدارة المنتجات</h2>
+          <p className="text-muted-foreground">أضف وعدّل واحذف المنتجات مع تحديد الفئة (كهربائية / إلكترونية)</p>
+        </div>
+        <Button onClick={() => setShowAddForm(!showAddForm)} variant={showAddForm ? "outline" : "default"}>
+          {showAddForm ? "إغلاق النموذج" : "إضافة منتج جديد"}
         </Button>
       </div>
 
       {showAddForm && (
         <Card>
           <CardHeader>
-            <CardTitle>
-              {editingProduct ? "تعديل المنتج" : "إضافة منتج جديد"}
-            </CardTitle>
+            <CardTitle>{editingProduct ? "تعديل منتج" : "منتج جديد"}</CardTitle>
+            <CardDescription>الحقول الأساسية مع اختيار الفئة والصورة وملف المواصفات</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">اسم المنتج</label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  placeholder="أدخل اسم المنتج"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">ملف المواصفات الفنية (PDF)</label>
-                <Input
-                  type="file"
-                  accept="application/pdf"
-                  onChange={(e) => setFormData({ ...formData, spec_pdf: e.target.files?.[0] || null })}
-                />
-                {editingProduct?.spec_pdf_url && (
-                  <div className="mt-2 text-sm">
-                    موجود ملف مواصفات: <a href={editingProduct.spec_pdf_url} target="_blank" rel="noopener noreferrer" className="text-primary underline">عرض الملف الحالي</a>
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">صور إضافية</label>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={(e) => setExtraImages(Array.from(e.target.files || []))}
-                />
-                {(extraImages.length > 0 || (imageUrlsPreview && imageUrlsPreview.length > 0)) && (
-                  <div className="mt-3 grid grid-cols-3 gap-3">
-                    {(imageUrlsPreview || []).map((url, idx) => (
-                      <div key={`existing-${idx}`} className="relative group">
-                        <img src={url} className="w-full h-24 object-cover rounded-md" />
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteImageUrl(url)}
-                          className="absolute top-1 right-1 bg-destructive text-destructive-foreground text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100"
-                        >
-                          حذف
-                        </button>
-                      </div>
-                    ))}
-                    {extraImages.map((file, idx) => (
-                      <div key={`new-${idx}`} className="relative group">
-                        <img src={URL.createObjectURL(file)} className="w-full h-24 object-cover rounded-md" />
-                        <button
-                          type="button"
-                          onClick={() => removeExtraImage(idx)}
-                          className="absolute top-1 right-1 bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100"
-                        >
-                          إلغاء
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">الوصف</label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="أدخل وصف المنتج"
-                  rows={3}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">السعر</label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  required
-                  placeholder="0.00"
-                />
-              </div>
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">الواط</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={formData.watt}
-                    onChange={(e) => setFormData({ ...formData, watt: e.target.value })}
-                    placeholder="مثال: 6"
-                  />
+                  <Label>اسم المنتج *</Label>
+                  <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">معامل إظهار اللون (CRI)</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={formData.cri}
-                    onChange={(e) => setFormData({ ...formData, cri: e.target.value })}
-                    placeholder="مثال: 80"
-                  />
+                  <Label>السعر</Label>
+                  <Input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">زاوية الانتشار (°)</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="180"
-                    value={formData.beam_angle}
-                    onChange={(e) => setFormData({ ...formData, beam_angle: e.target.value })}
-                    placeholder="مثال: 60"
-                  />
+                  <Label>الفئة</Label>
+                  <select
+                    className="w-full rounded-md border border-border bg-background px-3 py-2"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  >
+                    {CATEGORY_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">الجهد الكهربائي</label>
-                  <Input
-                    value={formData.voltage_range}
-                    onChange={(e) => setFormData({ ...formData, voltage_range: e.target.value })}
-                    placeholder="مثال: 220V-240V"
+                <div className="flex items-center gap-2 mt-6">
+                  <Switch
+                    checked={formData.featured}
+                    onCheckedChange={(checked) => setFormData({ ...formData, featured: checked })}
+                    id="featured"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">درجة المقاومة (IP)</label>
-                  <Input
-                    value={formData.ip_rating}
-                    onChange={(e) => setFormData({ ...formData, ip_rating: e.target.value })}
-                    placeholder="مثال: IP20"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">مجموع اللومين</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={formData.total_lumen}
-                    onChange={(e) => setFormData({ ...formData, total_lumen: e.target.value })}
-                    placeholder="مثال: 550"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">الضمان (بالسنوات)</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={formData.warranty_years}
-                    onChange={(e) => setFormData({ ...formData, warranty_years: e.target.value })}
-                    placeholder="مثال: 2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">قاعدة اللمبة</label>
-                  <Input
-                    value={formData.base_type}
-                    onChange={(e) => setFormData({ ...formData, base_type: e.target.value })}
-                    placeholder="مثال: GU10"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">مادة الصنع</label>
-                  <Input
-                    value={formData.material}
-                    onChange={(e) => setFormData({ ...formData, material: e.target.value })}
-                    placeholder="مثال: ألومنيوم وزجاج"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-2">أماكن الاستخدام</label>
-                  <Textarea
-                    rows={2}
-                    value={formData.usage_areas}
-                    onChange={(e) => setFormData({ ...formData, usage_areas: e.target.value })}
-                    placeholder="مثال: الممرات، غرف المعيشة، المكاتب"
-                  />
+                  <Label htmlFor="featured" className="flex items-center gap-1">
+                    <Star className="h-4 w-4" /> منتج مميز
+                  </Label>
                 </div>
               </div>
+
               <div>
-                <label className="block text-sm font-medium mb-2">صورة المنتج</label>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setFormData({ ...formData, image: e.target.files?.[0] || null })}
-                  required={!editingProduct}
-                />
+                <Label>الوصف</Label>
+                <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={3} />
               </div>
-              <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                <Switch
-                  id="featured"
-                  checked={formData.featured}
-                  onCheckedChange={(checked) => setFormData({ ...formData, featured: checked })}
-                />
-                <Label htmlFor="featured" className="flex items-center gap-2">
-                  <Star className="h-4 w-4" />
-                  منتج مميز (يظهر في الصفحة الرئيسية)
-                </Label>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>الصورة الرئيسية</Label>
+                  <Input type="file" accept="image/*" onChange={(e) => setFormData({ ...formData, image: e.target.files?.[0] || null })} />
+                </div>
+                <div>
+                  <Label>صور إضافية (اختياري)</Label>
+                  <Input type="file" accept="image/*" multiple onChange={(e) => setExtraImages(Array.from(e.target.files || []))} />
+                </div>
               </div>
-              <div className="flex gap-2">
+
+              <div>
+                <Label>ملف مواصفات PDF (اختياري)</Label>
+                <Input type="file" accept="application/pdf" onChange={(e) => setFormData({ ...formData, spec_pdf: e.target.files?.[0] || null })} />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>القدرة (واط)</Label>
+                  <Input value={formData.watt} onChange={(e) => setFormData({ ...formData, watt: e.target.value })} />
+                </div>
+                <div>
+                  <Label>CRI</Label>
+                  <Input value={formData.cri} onChange={(e) => setFormData({ ...formData, cri: e.target.value })} />
+                </div>
+                <div>
+                  <Label>زاوية الإضاءة</Label>
+                  <Input value={formData.beam_angle} onChange={(e) => setFormData({ ...formData, beam_angle: e.target.value })} />
+                </div>
+                <div>
+                  <Label>نطاق الفولت</Label>
+                  <Input value={formData.voltage_range} onChange={(e) => setFormData({ ...formData, voltage_range: e.target.value })} />
+                </div>
+                <div>
+                  <Label>IP</Label>
+                  <Input value={formData.ip_rating} onChange={(e) => setFormData({ ...formData, ip_rating: e.target.value })} />
+                </div>
+                <div>
+                  <Label>اللومن الكلي</Label>
+                  <Input value={formData.total_lumen} onChange={(e) => setFormData({ ...formData, total_lumen: e.target.value })} />
+                </div>
+                <div>
+                  <Label>الضمان (سنوات)</Label>
+                  <Input value={formData.warranty_years} onChange={(e) => setFormData({ ...formData, warranty_years: e.target.value })} />
+                </div>
+                <div>
+                  <Label>نوع القاعدة</Label>
+                  <Input value={formData.base_type} onChange={(e) => setFormData({ ...formData, base_type: e.target.value })} />
+                </div>
+                <div>
+                  <Label>المادة</Label>
+                  <Input value={formData.material} onChange={(e) => setFormData({ ...formData, material: e.target.value })} />
+                </div>
+                <div>
+                  <Label>أماكن الاستخدام</Label>
+                  <Input value={formData.usage_areas} onChange={(e) => setFormData({ ...formData, usage_areas: e.target.value })} />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
                 <Button type="submit" disabled={isSubmitting}>
-                  <Save className="mr-2 h-4 w-4" />
-                  {isSubmitting ? "جاري الحفظ..." : "حفظ"}
+                  <Save className="h-4 w-4 ml-1" /> {editingProduct ? "حفظ التعديلات" : "حفظ المنتج"}
                 </Button>
                 <Button type="button" variant="outline" onClick={resetForm}>
-                  إلغاء
+                  <X className="h-4 w-4 ml-1" /> إلغاء
                 </Button>
               </div>
             </form>
@@ -594,60 +378,48 @@ const ProductManager = () => {
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {products.map((product) => (
-          <Card key={product.id}>
-            <CardHeader className="pb-2">
-              {product.image_url && (
-                <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="w-full h-48 object-cover rounded-md"
-                />
-              )}
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-semibold text-lg">{product.name}</h4>
-                {product.featured && (
-                  <div className="flex items-center gap-1 bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
-                    <Star className="h-3 w-3 fill-current" />
-                    مميز
-                  </div>
-                )}
-              </div>
-              <p className="text-muted-foreground text-sm mb-2 line-clamp-2">
-                {product.description}
-              </p>
-              <p className="font-bold text-primary mb-4">{product.price} ريال
-                
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEdit(product)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDelete(product.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>المنتجات</CardTitle>
+          <CardDescription>إدارة كافة المنتجات الحالية</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <p className="text-muted-foreground">جاري تحميل المنتجات...</p>
+          ) : products.length === 0 ? (
+            <p className="text-muted-foreground">لا توجد منتجات حالياً.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {products.map((product) => (
+                <Card key={product.id} className="border">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-lg">{product.name}</h4>
+                      {product.featured && (
+                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full flex items-center gap-1">
+                          <Star className="h-3 w-3" /> مميز
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">الفئة: {product.category || "غير محدد"}</p>
+                    <p className="text-sm text-muted-foreground">السعر: {product.price ?? "-"}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
 
-      {products.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">لا توجد منتجات حالياً</p>
-        </div>
-      )}
+                    <div className="flex gap-2">
+                      <Button variant="secondary" size="sm" onClick={() => handleEdit(product)}>
+                        <Edit className="h-4 w-4 ml-1" /> تعديل
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => handleDelete(product.id)}>
+                        <Trash2 className="h-4 w-4 ml-1" /> حذف
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

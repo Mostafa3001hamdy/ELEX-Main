@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,7 @@ import { Star, Zap, Shield, Award, ChevronLeft, ChevronRight, Play, Pause } from
 import productImage from "@/assets/product-lighting.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 interface FeaturedProduct {
   id: number;
@@ -15,7 +16,6 @@ interface FeaturedProduct {
   price: number;
   image_url: string;
   featured: boolean;
-  // Optional English fields
   name_en?: string;
   description_en?: string;
 }
@@ -27,6 +27,7 @@ const ProductShowcase = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  useScrollReveal([featuredProducts.length, isLoading]);
   
   useEffect(() => {
     fetchFeaturedProducts();
@@ -38,7 +39,7 @@ const ProductShowcase = () => {
         setCurrentIndex((prevIndex) => 
           prevIndex === featuredProducts.length - 1 ? 0 : prevIndex + 1
         );
-      }, 5000); // تغيير كل 5 ثوان
+      }, 5000);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -91,7 +92,7 @@ const ProductShowcase = () => {
     const currency = t('product.currency');
     const message = language === 'en'
       ? `Hello, I would like to order the product: ${nameText} for ${product.price} ${currency}. Link: ${window.location.origin}`
-      : `مرحبا، أريد طلب المنتج: ${nameText} بسعر ${product.price} ${currency}. الرابط: ${window.location.origin}`;
+      : `أرغب في طلب المنتج: ${nameText} بسعر ${product.price} ${currency}. الرابط: ${window.location.origin}`;
     return `${base}?text=${encodeURIComponent(message)}`;
   };
   
@@ -115,7 +116,7 @@ const ProductShowcase = () => {
 
   if (isLoading) {
     return (
-      <section className="py-16 bg-accent/30">
+      <section className="py-16 bg-accent/30" data-animate="fade-up">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
@@ -127,53 +128,44 @@ const ProductShowcase = () => {
   }
 
   if (!featuredProducts || featuredProducts.length === 0) {
-    return (
-      <section className="py-16 bg-accent/30">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              لا يوجد منتجات مميزة حالياً
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              يرجى تحديد منتجات مميزة من لوحة الإدارة ليظهر هنا
-            </p>
-          </div>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   const currentProduct = featuredProducts[currentIndex];
 
   return (
-    <section className="py-16 bg-accent/30">
+    <section className="py-16 bg-accent/30" data-animate="fade-up">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-12">
-          <Badge variant="secondary" className="mb-4 px-4 py-2 text-sm font-medium">
+        <div className="text-center mb-12" data-animate="fade-up">
+          <Badge variant="secondary" className="mb-4 px-4 py-2 text-sm font-medium" data-animate="fade-up" data-delay="80">
             {t('product.featuredBadge')}
           </Badge>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4" data-animate="fade-up" data-delay="140">
             {language === 'en' && currentProduct.name_en ? currentProduct.name_en : currentProduct.name}
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto" data-animate="fade-up" data-delay="200">
             {language === 'en' && currentProduct.description_en ? currentProduct.description_en : currentProduct.description}
           </p>
         </div>
 
-        {/* Product Card */}
-        <Card className="max-w-6xl mx-auto bg-background shadow-soft border-0 overflow-hidden relative">
+        <Card 
+          className="max-w-6xl mx-auto bg-background shadow-soft border-0 overflow-hidden relative"
+          data-animate="scale-up"
+          data-delay="160"
+        >
           <CardContent className="p-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-              {/* Product Image */}
-              <div className="relative bg-gradient-accent p-8 lg:p-12 flex items-center justify-center">
+              <div
+                className="relative bg-gradient-accent p-8 lg:p-12 flex items-center justify-center"
+                data-animate="fade-right"
+                data-delay="140"
+              >
                 <div className="relative">
                   <img
                     src={currentProduct.image_url || productImage}
                     alt={language === 'en' && currentProduct.name_en ? currentProduct.name_en : currentProduct.name}
                     className="w-full max-w-md h-auto object-contain rounded-lg transition-all duration-500"
                   />
-                  {/* Rating Badge */}
                   <div className="absolute -top-4 -right-4 bg-primary text-primary-foreground px-3 py-2 rounded-full flex items-center space-x-1 rtl:space-x-reverse shadow-medium">
                     <Star className="h-4 w-4 fill-current" />
                     <span className="text-sm font-semibold">4.9</span>
@@ -181,9 +173,8 @@ const ProductShowcase = () => {
                 </div>
               </div>
 
-              {/* Product Info */}
               <div className="p-8 lg:p-12 flex flex-col justify-center">
-                <div className="mb-6">
+                <div className="mb-6" data-animate="fade-up">
                   <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
                     {language === 'en' && currentProduct.name_en ? currentProduct.name_en : currentProduct.name}
                   </h3>
@@ -191,52 +182,39 @@ const ProductShowcase = () => {
                     {language === 'en' && currentProduct.description_en ? currentProduct.description_en : currentProduct.description}
                   </p>
 
-                  {/* Features */}
                   <div className="space-y-4 mb-8">
                     {features.map((feature, index) => (
-                      <div key={index} className="flex items-start space-x-3 rtl:space-x-reverse">
+                      <div 
+                        key={index} 
+                        className="flex items-start space-x-3 rtl:space-x-reverse"
+                        data-animate="fade-up"
+                        data-delay={200 + index * 80}
+                      >
                         <div className="bg-primary/10 rounded-full p-2 flex-shrink-0">
                           <div className="text-primary">
                             {feature.icon}
                           </div>
                         </div>
                         <div>
-                          <h4 className="font-semibold text-foreground mb-1">
-                            {feature.title}
-                          </h4>
-                          <p className="text-muted-foreground text-sm">
-                            {feature.description}
-                          </p>
+                          <h4 className="text-lg font-semibold text-foreground">{feature.title}</h4>
+                          <p className="text-muted-foreground">{feature.description}</p>
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  {/* Pricing */}
-                  <div className="mb-8">
-                    <div className="flex items-baseline space-x-2 rtl:space-x-reverse mb-2">
-                      <span className="text-3xl font-bold text-primary">{currentProduct.price}</span>
-                      <span className="text-lg text-muted-foreground">ريال</span>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <a
-                      href={buildWhatsAppUrl(currentProduct)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1"
+                  <div className="flex flex-col sm:flex-row gap-3" data-animate="scale-up" data-delay="240">
+                    <Button asChild>
+                      <Link to={`/products/${currentProduct.id}`}>التفاصيل</Link>
+                    </Button>
+                    <Button 
+                      asChild 
+                      className="bg-black text-white hover:bg-black/85 border border-black"
                     >
-                      <Button className="w-full bg-[#25D366] hover:opacity-90 text-white">
+                      <a href={buildWhatsAppUrl(currentProduct)} target="_blank" rel="noopener noreferrer">
                         {t('product.orderNow')}
-                      </Button>
-                    </a>
-                    <Link to={`/products/${currentProduct.id}`} className="flex-1">
-                      <Button variant="outline" className="w-full">
-                        {t('product.moreDetails')}
-                      </Button>
-                    </Link>
+                      </a>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -244,66 +222,30 @@ const ProductShowcase = () => {
           </CardContent>
         </Card>
 
-        {/* Navigation Controls */}
-        {featuredProducts.length > 1 && (
-          <div className="flex items-center justify-center gap-4 mt-8">
-            {/* Previous Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToPrevious}
-              className="rounded-full w-10 h-10 p-0 hover:bg-primary hover:text-primary-foreground transition-smooth"
-            >
-              <ChevronRight className="h-4 w-4" />
+        <div className="flex items-center justify-between mt-8" data-animate="fade-up" data-delay="200">
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="icon" onClick={goToPrevious}>
+              <ChevronRight className="h-5 w-5 rtl:rotate-180" />
             </Button>
-
-            {/* Play/Pause Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleAutoPlay}
-              className="rounded-full w-10 h-10 p-0 hover:bg-primary hover:text-primary-foreground transition-smooth"
-            >
-              {isAutoPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            </Button>
-
-            {/* Next Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToNext}
-              className="rounded-full w-10 h-10 p-0 hover:bg-primary hover:text-primary-foreground transition-smooth"
-            >
-              <ChevronLeft className="h-4 w-4" />
+            <Button variant="outline" size="icon" onClick={goToNext}>
+              <ChevronLeft className="h-5 w-5 rtl:rotate-180" />
             </Button>
           </div>
-        )}
-
-        {/* Dots Indicator */}
-        {featuredProducts.length > 1 && (
-          <div className="flex justify-center gap-2 mt-6">
-            {featuredProducts.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  index === currentIndex
-                    ? 'bg-primary scale-125'
-                    : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-                }`}
-              />
-            ))}
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={toggleAutoPlay}>
+              {isAutoPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+            </Button>
+            <div className="flex gap-2">
+              {featuredProducts.map((_, idx) => (
+                <button
+                  key={`dot-${idx}`}
+                  onClick={() => goToSlide(idx)}
+                  className={`h-2 w-2 rounded-full transition-all ${idx === currentIndex ? 'bg-primary w-4' : 'bg-muted'}`}
+                />
+              ))}
+            </div>
           </div>
-        )}
-
-        {/* Product Counter */}
-        {featuredProducts.length > 1 && (
-          <div className="text-center mt-4">
-            <span className="text-sm text-muted-foreground">
-              {currentIndex + 1} من {featuredProducts.length}
-            </span>
-          </div>
-        )}
+        </div>
       </div>
     </section>
   );

@@ -6,9 +6,11 @@ import About from "@/components/About";
 import Footer from "@/components/Footer";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 const Index = () => {
   const location = useLocation();
+  useScrollReveal([location.pathname, location.hash]);
 
   useEffect(() => {
     const scrollToHash = () => {

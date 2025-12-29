@@ -1,22 +1,25 @@
-import { Card, CardContent } from "@/components/ui/card";
+﻿import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   Award, 
   Users, 
   Target, 
   Lightbulb,
-  CheckCircle
+  CheckCircle,
+  Plane
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 const About = () => {
   const { t } = useLanguage();
   
   const stats = [
-    { icon: <Award className="h-6 w-6" />, number: "10+", label: t('about.yearsExperience') },
-    { icon: <Users className="h-6 w-6" />, number: "500+", label: t('about.satisfiedClients') },
-    { icon: <Target className="h-6 w-6" />, number: "1000+", label: t('about.completedProjects') },
-    { icon: <Lightbulb className="h-6 w-6" />, number: "50+", label: t('about.innovativeSolutions') }
+    { icon: <Award className="h-5 w-5" />, number: "10+", label: t('about.yearsExperience') },
+    { icon: <Users className="h-5 w-5" />, number: "500+", label: t('about.satisfiedClients') },
+    { icon: <Target className="h-5 w-5" />, number: "10+", label: t('about.completedProjects') },
+    { icon: <Plane className="h-5 w-5" />, number: "10+", label: t('about.airFreightTons') },
+    { icon: <Lightbulb className="h-5 w-5" />, number: "50+", label: t('about.innovativeSolutions') }
   ];
 
   const values = [
@@ -37,12 +40,13 @@ const About = () => {
       description: t('about.sustainabilityDesc')
     }
   ];
+  useScrollReveal([stats.length, values.length]);
 
   return (
-    <section id="about" className="section-logo-bg py-20 bg-background">
+    <section id="about" className="section-logo-bg py-20 bg-background" data-animate="fade-up">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-16" data-animate="fade-up">
           <Badge variant="secondary" className="mb-4 px-4 py-2 text-sm font-medium">
             {t('about.aboutBadge')}
           </Badge>
@@ -55,21 +59,23 @@ const About = () => {
         </div>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-20">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-8 mb-16">
           {stats.map((stat, index) => (
             <div 
               key={index} 
               className="text-center group hover:scale-105 transition-smooth duration-300"
+              data-animate="fade-up"
+              data-delay={index * 80}
             >
-              <div className="bg-primary/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-smooth">
+              <div className="bg-primary/10 rounded-full w-14 h-14 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/20 transition-smooth">
                 <div className="text-primary">
                   {stat.icon}
                 </div>
               </div>
-              <div className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+              <div className="text-2xl md:text-3xl font-bold text-foreground mb-1">
                 {stat.number}
               </div>
-              <div className="text-muted-foreground font-medium">
+              <div className="text-sm text-muted-foreground font-medium">
                 {stat.label}
               </div>
             </div>
@@ -78,7 +84,7 @@ const About = () => {
 
         {/* Vision & Mission */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
-          <Card className="bg-gradient-accent border-0 shadow-soft">
+          <Card className="bg-gradient-accent border-0 shadow-soft" data-animate="scale-up" data-delay="80">
             <CardContent className="p-8">
               <div className="bg-primary/10 rounded-full w-12 h-12 flex items-center justify-center mb-6">
                 <Target className="h-6 w-6 text-primary" />
@@ -90,7 +96,7 @@ const About = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-accent border-0 shadow-soft">
+          <Card className="bg-gradient-accent border-0 shadow-soft" data-animate="scale-up" data-delay="160">
             <CardContent className="p-8">
               <div className="bg-primary/10 rounded-full w-12 h-12 flex items-center justify-center mb-6">
                 <Lightbulb className="h-6 w-6 text-primary" />
@@ -104,7 +110,7 @@ const About = () => {
         </div>
 
         {/* Values */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-12" data-animate="fade-up">
           <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
             {t('about.coreValues')}
           </h3>
@@ -118,6 +124,8 @@ const About = () => {
             <div 
               key={index} 
               className="flex items-start space-x-4 rtl:space-x-reverse p-6 rounded-lg hover:bg-accent/50 transition-smooth"
+              data-animate="fade-up"
+              data-delay={index * 100}
             >
               <div className="bg-primary/10 rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0 mt-1">
                 <CheckCircle className="h-5 w-5 text-primary" />

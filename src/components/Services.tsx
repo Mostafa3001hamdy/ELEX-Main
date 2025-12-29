@@ -12,6 +12,7 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 interface ServiceItem {
   id: number;
@@ -32,6 +33,7 @@ const Services = () => {
   const { t, language } = useLanguage();
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  useScrollReveal([services.length, isLoading]);
 
   useEffect(() => {
     fetchServices();
@@ -95,10 +97,10 @@ const Services = () => {
   };
 
   return (
-    <section id="services" className="section-logo-bg py-20 bg-gradient-accent scroll-mt-40">
+    <section id="services" className="section-logo-bg py-20 bg-gradient-accent scroll-mt-40" data-animate="fade-up">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-16" data-animate="fade-up">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             {t('services.title')}
           </h2>
@@ -109,16 +111,18 @@ const Services = () => {
 
         {/* Services Grid */}
         {isLoading ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12" data-animate="fade-up">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">{t('services.loading')}</p>
           </div>
         ) : services.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service) => (
+            {services.map((service, index) => (
               <Card 
                 key={service.id} 
                 className="group hover:shadow-medium transition-smooth duration-300 border-0 bg-card/50 backdrop-blur-sm hover:-translate-y-2"
+                data-animate="fade-up"
+                data-delay={index * 100}
               >
                 <CardContent className="p-8">
                   {/* Icon */}
@@ -202,7 +206,7 @@ const Services = () => {
                   )}
 
                   {/* CTA Buttons */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" data-animate="scale-up" data-delay="140">
                     <Link to={`/services/${service.slug}`}>
                       <Button 
                         variant="outline" 
@@ -218,7 +222,7 @@ const Services = () => {
                       rel="noopener noreferrer"
                       className="w-full"
                     >
-                      <Button className="w-full bg-[#25D366] hover:opacity-90 text-white">
+                      <Button className="w-full bg-black text-white hover:bg-black/85 border border-black transition-smooth">
                         {t('services.whatsapp')}
                       </Button>
                     </a>
