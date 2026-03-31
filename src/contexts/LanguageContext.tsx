@@ -23,6 +23,8 @@ const translations = {
     'header.consultation': 'احصل على استشارة',
     'header.consultShort': 'استشارة',
     'header.search': 'ابحث عن المنتجات...',
+    'header.catalogs': 'كتالوجات',
+    'header.login': 'تسجيل دخول',
     
     // Services in Header
     'services.indoorLighting': 'إضاءة داخلية',
@@ -171,6 +173,8 @@ const translations = {
     'header.consultation': 'Get Consultation',
     'header.consultShort': 'Consultation',
     'header.search': 'Search for products...',
+    'header.catalogs': 'Catalogs',
+    'header.login': 'Login',
     
     // Services in Header
     'services.indoorLighting': 'Indoor Lighting',

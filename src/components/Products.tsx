@@ -1,9 +1,9 @@
 ﻿import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +43,7 @@ const Products = ({ searchQuery = "" }: ProductsProps) => {
   const { t, language } = useLanguage();
   const { addItem } = useCart();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchQuery);
@@ -69,14 +70,11 @@ const Products = ({ searchQuery = "" }: ProductsProps) => {
     }
   };
 
-  const buildWhatsAppUrl = (product: Product) => {
-    const base = "https://wa.me/966570135200";
-    const nameText = language === "en" && product.name_en ? product.name_en : product.name;
-    const currency = t("product.currency");
-    const message = language === "en"
-      ? `Hello, I would like to order the product: ${nameText} for ${product.price} ${currency}. Link: ${window.location.origin}`
-      : `أرغب في طلب المنتج: ${nameText} بسعر ${product.price} ${currency}. الرابط: ${window.location.origin}`;
-    return `${base}?text=${encodeURIComponent(message)}`;
+  const shortenDescription = (text: string | null | undefined, maxWords = 8) => {
+    if (!text) return "";
+    const words = text.trim().split(/\s+/);
+    if (words.length <= maxWords) return text;
+    return `${words.slice(0, maxWords).join(" ")}...`;
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -92,15 +90,24 @@ const Products = ({ searchQuery = "" }: ProductsProps) => {
   const renderCard = (product: Product) => (
     <Card
       key={product.id}
-      className="group hover:shadow-medium transition-smooth duration-300 border-0 bg-card/50 backdrop-blur-sm hover:-translate-y-2"
+      className="group hover:shadow-medium transition-smooth duration-300 border-0 bg-card/50 backdrop-blur-sm hover:-translate-y-2 cursor-pointer"
+      onClick={() => navigate(`/products/${product.id}`)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          navigate(`/products/${product.id}`);
+        }
+      }}
+      role="button"
+      tabIndex={0}
     >
       <CardContent className="p-8">
         {product.image_url && (
-          <div className="mb-6 overflow-hidden rounded-lg">
+          <div className="mb-6 overflow-hidden rounded-lg aspect-square">
             <img
               src={product.image_url}
               alt={language === "en" && product.name_en ? product.name_en : product.name}
-              className="w-full h-40 object-cover group-hover:scale-105 transition-smooth"
+              className="w-full h-full object-cover group-hover:scale-105 transition-smooth"
             />
           </div>
         )}
@@ -114,47 +121,28 @@ const Products = ({ searchQuery = "" }: ProductsProps) => {
             </span>
           )}
         </div>
-        <p className="text-muted-foreground mb-6 leading-relaxed line-clamp-3">
-          {language === "en" && product.description_en ? product.description_en : product.description}
+        <p className="text-muted-foreground mb-6 leading-relaxed line-clamp-2">
+          {shortenDescription(language === "en" && product.description_en ? product.description_en : product.description)}
         </p>
-        <div className="mb-4">
-          <Link to={`/products/${product.id}`} className="w-full inline-block">
-            <Button variant="secondary" className="w-full">{t("product.moreDetails")}</Button>
-          </Link>
-        </div>
         <div className="text-lg font-bold text-primary mb-4">
           {product.price} {t("product.currency")}
         </div>
-        <div className="space-y-2">
-          <Button
-            variant="default"
-            className="w-full"
-            onClick={() => {
-              addItem({
-                id: product.id,
-                name: language === "en" && product.name_en ? product.name_en : product.name,
-                price: product.price,
-                image: product.image_url,
-              });
-              toast({ title: "تمت الإضافة إلى السلة" });
-            }}
-          >
-            أضف للسلة
-          </Button>
-          <a
-            href={buildWhatsAppUrl(product)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full inline-block"
-          >
-            <Button
-              className="w-full bg-black text-white hover:bg-black/85 border border-black transition-smooth"
-            >
-              {t("product.orderNow")}
-              <ArrowLeft className="mr-2 h-4 w-4 rtl:rotate-180 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-smooth" />
-            </Button>
-          </a>
-        </div>
+        <Button
+          variant="default"
+          className="w-full"
+          onClick={(e) => {
+            e.stopPropagation();
+            addItem({
+              id: product.id,
+              name: language === "en" && product.name_en ? product.name_en : product.name,
+              price: product.price,
+              image: product.image_url,
+            });
+            toast({ title: "تمت الإضافة إلى السلة" });
+          }}
+        >
+          أضف للسلة
+        </Button>
       </CardContent>
     </Card>
   );
@@ -244,5 +232,6 @@ const Products = ({ searchQuery = "" }: ProductsProps) => {
     </section>
   );
 };
+ 
 
 export default Products;
