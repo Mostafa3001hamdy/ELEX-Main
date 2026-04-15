@@ -83,14 +83,6 @@ const Header = () => {
                 </a>
               </NavigationMenuItem>
 
-              <NavigationMenuItem>
-                <a
-                href="/catalogs"
-                  className="text-white hover:text-white/80 transition-smooth font-medium px-1"
-                >
-                  كتالوجات
-                </a>
-              </NavigationMenuItem>
 
               <NavigationMenuItem>
                 <a
