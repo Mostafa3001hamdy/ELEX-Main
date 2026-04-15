@@ -141,14 +141,14 @@ const Header = () => {
                 </span>
               )}
             </a>
-            <Button
+            {/* <Button
               variant="ghost"
               size="sm"
               className="hidden md:inline-flex text-white/80 hover:text-white transition-smooth"
               onClick={() => (window.location.href = "/admin/login")}
             >
               {t("header.login")}
-            </Button>
+            </Button> */}
             {/* Mobile menu button */}
             <button
               className="md:hidden"
